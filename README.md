@@ -1,50 +1,34 @@
-# static-resources project
+# No main manifest attribute when packaging static resources in an executable JAR with a Main
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## Dev mode
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+This example is about serving static resources[1] (an `index.html` page) when packaged in an executable JAR.
+If you look at the `pom.xml` there is just an Undertow dependency[2].
+If you execute Quarkus in dev mode (`./mvnw clean quarkus:dev`) and go to http://localhost:8080/ you will see the `index.html` page.
 
-## Running the application in dev mode
+## Production mode
 
-You can run your application in dev mode that enables live coding using:
-```shell script
-./mvnw compile quarkus:dev
+Now, let's package the app with `./mvnw clean package`.
+It creates an executable JAR.
+When we execute it, it doesn't work:
+
+```
+$ java -jar target/static-resources-1.0.0-SNAPSHOT.jar
+
+no main manifest attribute, in target/static-resources-1.0.0-SNAPSHOT.jar
 ```
 
-## Packaging and running the application
+So I've created a `Main` class as explained in[3] and added a `META-INF/MANIFEST.MF` file with the following content:
 
-The application can be packaged using:
-```shell script
-./mvnw package
 ```
-It produces the `static-resources-1.0.0-SNAPSHOT-runner.jar` file in the `/target` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
-
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
+Main-Class: org.agoncal.bug.quarkus.Main
 ```
 
-The application is now runnable using `java -jar target/static-resources-1.0.0-SNAPSHOT-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using: 
-```shell script
-./mvnw package -Pnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./mvnw package -Pnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/static-resources-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.html.
-
-# RESTEasy JAX-RS
-
-Guide: https://quarkus.io/guides/rest-json
+But I still get the same problem. It looks like Quarkus is not even reading the `MANIFEST.MF` file.
 
 
+## References
+
+* [1] https://quarkus.io/guides/http-reference#serving-static-resources
+* [2] https://quarkus.io/guides/http-reference#servlet-config
+* [3] https://quarkus.io/guides/lifecycle#the-main-method
